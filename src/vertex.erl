@@ -8,7 +8,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, add_neighbour/3, get_neighbours/1]).
+-export([start_link/1, add_neighbour/3, get_neighbours/1, add_pheromon/2, add_pheromon/3]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
@@ -33,6 +33,14 @@ add_neighbour(Id, N, Weight) ->
 
 get_neighbours(Id) ->
     gen_server:call(Id, {get_neighbours}).
+
+add_pheromon(Id, Value) ->
+    gen_server:cast(Id, {add_pheromon_all_edges, Value}).
+    
+add_pheromon(Id, N, Value) ->
+    gen_server:cast(N, {add_pheromon, Id, Value}),
+    gen_server:cast(Id, {add_pheromon, N, Value}).
+    
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -69,6 +77,12 @@ handle_call(_Request, _From, State = #vertex_state{}) ->
     {stop, Reason :: term(), NewState :: #vertex_state{}}).
 handle_cast({add_neighbour, Id, Weight}, State = #vertex_state{neighbours = N}) ->
     {noreply, State#vertex_state{neighbours = N#{Id => {Weight, 0}}}};
+handle_cast({add_pheromon_all_edges, Value}, State = #vertex_state{neighbours = Neighbours}) ->
+    NewNeighbours = maps:map(fun(_Key, {Cost, OldPheromon}) -> {Cost, OldPheromon + Value} end, Neighbours),
+    {noreply, State#vertex_state{neighbours = NewNeighbours}};
+handle_cast({add_pheromon, N, Value}, State = #vertex_state{neighbours = Neighbours}) ->
+    {Cost, OldPheromon} = maps:get(N, Neighbours),
+    {noreply, State#vertex_state{neighbours = Neighbours#{N => {Cost, OldPheromon + Value}}}};
 handle_cast(_Request, State = #vertex_state{}) ->
     {noreply, State}.
 

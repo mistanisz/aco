@@ -48,6 +48,7 @@ start_all() ->
     gen_server:cast(?SERVER, {start_all}).
 
 demo() ->
+    timer:sleep(300),
     start_link(),
     create_vertex(v1),
     create_vertex(v2),

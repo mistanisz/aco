@@ -71,8 +71,9 @@ handle_cast({move_to_next}, State = #mrowka_state{current_vertex = V, id = Id, m
     io:format("Mrowka ~p is in vertex ~p~n", [Id, V]),
     {ok, N} = vertex:get_neighbours(V),
     {Next, Cost} = Module:select_next(N),
+    vertex:add_pheromon(V, Next, 1),
     io:format("Mrowka ~p moving to vertex ~p~n", [Id, Next]),
-    timer:sleep(Cost *400),
+    timer:sleep(Cost * 400),
     gen_server:cast(Id, {move_to_next}),
     {noreply, State#mrowka_state{current_vertex = Next}};
 handle_cast(_Request, State = #mrowka_state{}) ->
